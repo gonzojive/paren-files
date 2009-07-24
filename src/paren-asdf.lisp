@@ -1,13 +1,26 @@
 (in-package :parenscript.asdf)
 
 (defvar *parenscript-file-extension* "paren")
+(defvar *javascript-file-extension* "js")
 
 ;;; ASDF manual: http://constantly.at/lisp/asdf/index.html
+
+(defun slurp-file-3000 (pathname)
+  "A SLURP-FILE function inspired Mr. Insane 3000's
+     SLURP-STREAM4."
+  (with-open-file (strm pathname)
+    (let ((string (make-string (file-length strm))))
+      (read-sequence string strm)
+      string)))
+
 
 ;;; a parenscript file is a source file:
 ;;; A source file is any file that the system does not know how to generate
 ;;; from other components of the system.
 (defclass asdf::parenscript-file (asdf:source-file)
+  ())
+
+(defclass asdf::javascript-file (asdf:source-file)
   ())
 
 (defclass asdf::parenscript-compile-op (asdf:operation)
@@ -40,6 +53,11 @@
   "Do nothing on a source (non-compound) component."
   nil)
 
+(defmethod perform ((op asdf::parenscript-compile-op) (file asdf::javascript-file))
+  "Include the javascript in the output stream."
+  (write-string (slurp-file-3000 (component-pathname file)) (output-stream op)))
+
+
 (defmethod perform ((op asdf::parenscript-compile-op) (file asdf::parenscript-file))
   (paren-files:compile-script-file 
    (component-pathname file)
@@ -56,6 +74,12 @@
 (defmethod operation-done-p ((op asdf::parenscript-compile-op) (file asdf::parenscript-file))
   (and (not (force-p op))
        (call-next-method)))
+
+(defmethod operation-done-p ((op asdf::parenscript-compile-op) (file asdf::javascript-file))
+  (and (not (force-p op))
+       (call-next-method)))
+
+
 
 ;;; FIXME: we simply copy load-op's dependencies.  this is Just Not Right.
 ;; compiling a script system requires compiling the lisp system as well
@@ -80,8 +104,16 @@ lisp system be loaded first."
   (declare (ignore c) (ignore s))
   *parenscript-file-extension*)
 
+(defmethod asdf:source-file-type ((c asdf::javascript-file) (s asdf:module))
+  (declare (ignore c) (ignore s))
+  *javascript-file-extension*)
+
 ;;; when you compile the system, compile the Parenscript files in it.
 (defmethod asdf:perform ((op compile-op) (paren-file asdf::parenscript-file))
+;  (parenscript:compile-parenscript-file (component-pathname paren-file)))
+  )
+
+(defmethod asdf:perform ((op compile-op) (file asdf::javascript-file))
 ;  (parenscript:compile-parenscript-file (component-pathname paren-file)))
   )
 
@@ -89,6 +121,9 @@ lisp system be loaded first."
 ;;; be enhanced so that files are automatically installed into the appropriate web
 ;;; framework, etc.  for now we do nothing.
 (defmethod asdf:perform ((op load-op) (paren-file asdf::parenscript-file))
+  nil)
+
+(defmethod asdf:perform ((op load-op) (file asdf::javascript-file))
   nil)
 
 (defun compile-script-system (system 
