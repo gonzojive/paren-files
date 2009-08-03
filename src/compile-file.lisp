@@ -32,9 +32,10 @@ with a parenscript reader, if necessary."
   "Compiles the given Parenscript source file and outputs the results
 to the given output stream."
   (declare (ignore output-spec pretty-print))
+  (declare (optimize debug))
   (with-ps-compilation-environment (comp-env)
     (with-toplevel-compilation (comp-env)
-      (let ((ps::*read-function* #'read-parenscript-form))
+      (let ((ps:*ps-read-function* #'read-parenscript-form))
 	(write-string (ps:ps-compile-file source-file) output-stream)))))
 
 
