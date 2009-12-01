@@ -1,6 +1,5 @@
 (in-package :paren-files)
 
-
 (defmacro with-ps-compilation-environment ((env) &body body)
   (let ((%env (gensym "env")))
   `(let ((,%env ,env))

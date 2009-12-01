@@ -248,6 +248,7 @@
 
 (defun read (&optional (input-stream *standard-input*)
              (eof-error-p t) eof-value recursive-p)
+  (format t "invoked the parenscript reader~%")
   (let ((*preserve-whitespace-p* (when recursive-p *preserve-whitespace-p*)))
     (declare (special *preserve-whitespace-p*))
     (read-lisp-object input-stream eof-error-p eof-value recursive-p)))

@@ -51,6 +51,7 @@ script package names rather than Lisp package names.")
 ;  (:import-from :parenscript
 ;		#:*compilation-environment*)
   (:export #:compile-script-file
+	   #:read-parenscript-form
 	   #:compile-script-file-to-string
 	   #:compile-script-file-to-js-file
 	   #:compile-script-system))

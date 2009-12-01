@@ -126,6 +126,8 @@ lisp system be loaded first."
 (defmethod asdf:perform ((op load-op) (file asdf::javascript-file))
   nil)
 
+
+
 (defun compile-script-system (system 
 			      &key
 			      (pretty-print t)
