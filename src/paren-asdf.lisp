@@ -3,6 +3,7 @@
 (defvar *parenscript-file-extension* "paren")
 (defvar *javascript-file-extension* "js")
 
+(defvar *omit-implicit-load-op-dependency*  nil)
 ;;; ASDF manual: http://constantly.at/lisp/asdf/index.html
 
 (defun slurp-file-3000 (pathname)
@@ -40,6 +41,8 @@
     :documentation "T to force compilation."))
   (:documentation "The operation used in conjunction with parenscript:compile-script-system."))
 
+(defparameter *ps-compile-noops* 0)
+(defparameter *ps-compile-ps-files* 0)
 ;;;; OUR CUSTOM PARENSCRIPT COMPILATION
 (defmethod output-files ((op asdf::parenscript-compile-op) general-component)
   "Parenscript compilation does not, in general, produce output files."
@@ -47,18 +50,21 @@
 
 (defmethod perform ((op asdf::parenscript-compile-op) general-component)
   "Do the usual on some non-specific component."
-  (call-next-method))
+;  (format t "Performing ps operation on ~A~%" general-component)
+  nil);(call-next-method))
 
 (defmethod perform ((op asdf::parenscript-compile-op) (file asdf:source-file))
   "Do nothing on a source (non-compound) component."
-  nil)
+  (incf *ps-compile-noops*)
+  (call-next-method))
 
 (defmethod perform ((op asdf::parenscript-compile-op) (file asdf::javascript-file))
   "Include the javascript in the output stream."
   (write-string (slurp-file-3000 (component-pathname file)) (output-stream op)))
 
-
 (defmethod perform ((op asdf::parenscript-compile-op) (file asdf::parenscript-file))
+  (incf *ps-compile-ps-files*)
+;  (format t "Compiling ps file  ~A~%" file)
   (paren-files:compile-script-file 
    (component-pathname file)
    :comp-env (comp-env op)
@@ -68,18 +74,20 @@
   (write-char #\Newline (output-stream op)))
 
 (defmethod operation-done-p ((op asdf::parenscript-compile-op) general-component)
-  (call-next-method)
-  nil)
+  (call-next-method))
+
+(defmethod operation-done-p ((op asdf::parenscript-compile-op) (module asdf:module))
+  (call-next-method))
 
 (defmethod operation-done-p ((op asdf::parenscript-compile-op) (file asdf::parenscript-file))
-  (and (not (force-p op))
-       (call-next-method)))
+  nil)
+;(and (not (force-p op))
+;       (call-next-method)))
 
 (defmethod operation-done-p ((op asdf::parenscript-compile-op) (file asdf::javascript-file))
-  (and (not (force-p op))
-       (call-next-method)))
-
-
+  nil)
+;  (and (not (force-p op))
+;       (call-next-method)))
 
 ;;; FIXME: we simply copy load-op's dependencies.  this is Just Not Right.
 ;; compiling a script system requires compiling the lisp system as well
@@ -95,7 +103,12 @@
 (defmethod asdf:component-depends-on ((op asdf::parenscript-compile-op) (system system))
   "Returns the list of operations the system depends on to ps-compile.  We requrie that the
 lisp system be loaded first."
-  (cons (list 'asdf:load-op system) (call-next-method)))
+  (let ((dep
+	 (if *omit-implicit-load-op-dependency*
+	     (call-next-method)
+	     (cons (list 'asdf:load-op system) (call-next-method)))))
+    ;(format t "System dependencies of ~A:~%~A~%" system dep)
+    dep))
 
 ;;;; STANDARD LISP COMPILATION -- currently does nothing
 ;;; file extension for parenscript files is ".paren"
