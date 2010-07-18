@@ -16,7 +16,8 @@
   :components ((:module "src"
 			:components
 			((:file "package")
+                         #+nil
 			 (:file "reader" :depends-on ("package"))
-			 (:file "compile-file" :depends-on ("package" "reader"))
+			 (:file "compile-file" :depends-on ("package" #+nil "reader"))
 			 (:file "paren-asdf" :depends-on ("compile-file")))))
   :depends-on (:parenscript))

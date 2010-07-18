@@ -17,9 +17,9 @@
 (defun read-parenscript-form (&optional (stream *standard-input*) eof-error-op eof-value recursivep)
     "Reads a parenscript form from a stream.  Use instead of READ so we can replace the reader
 with a parenscript reader, if necessary."
-    #+parenscript-reader
-    (parenscript.reader:read stream eof-error-op eof-value recursivep)
-    #-parenscript-reader
+    ;;+parenscript-reader
+    ;;(parenscript.reader:read stream eof-error-op eof-value recursivep)
+    ;; #-parenscript-reader
     (read stream eof-error-op eof-value recursivep))
 
 (defun compile-script-file (source-file
